@@ -4,8 +4,16 @@ development:
     # Defines the default client. (required)
     default:
       # Mongoid can connect to a URI accepted by the driver:
-      uri: mongodb+srv://<%=ENV["atlas_username"]%>:<%=ENV["atlas_password"]%>@cluster0-ogcdy.mongodb.net/<workflowy_clone_api_development>?retryWrites=true&w=majority
-      
+      uri: mongodb+srv://<%=ENV["atlas_username"]%>:<<%=ENV["atlas_password"]%>>@cluster0-ogcdy.mongodb.net/<dbname>?retryWrites=true&w=majority
+
+      # Otherwise define the parameters separately.
+      # This defines the name of the default database that Mongoid can connect to.
+      # (required).
+      database: workflowy_clone_api_development
+      # Provides the hosts the default client can connect to. Must be an array
+      # of host:port pairs. (required)
+      hosts:
+        - localhost:27017
       options:
         # Note that all options listed below are Ruby driver client options (the mongo gem).
         # Please refer to the driver documentation of the version of the mongo gem you are using
