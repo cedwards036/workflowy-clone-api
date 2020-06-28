@@ -62,4 +62,34 @@ RSpec.describe "Tags", type: :request do
       end
     end
   end
+
+  describe 'POST /tags' do
+    let(:valid_attributes) { { 
+      tag: {
+        name: "a_new_tag",
+      },
+      list_id: list_id
+    } }
+
+    context 'when the request is valid' do
+      before {post '/tags', params: valid_attributes}
+
+      it 'creates a tag' do
+        expect(JSON.parse(response.body)['name']).to eq('a_new_tag')
+        expect(Tag.all.length).to eq(2)
+      end
+
+      it 'adds the tag to the tag\'s list' do
+        new_tag_id = Tag.all[1]['_id']
+        expect(List.find(list_id).tags[1]['_id']).to eq(new_tag_id)
+      end
+    end
+
+    context 'when the request is invalid' do
+      it 'returns status code 400' do
+        post '/tags', params: {foo: 'bar'}
+        expect(response).to have_http_status(400)
+      end
+    end
+  end
 end
