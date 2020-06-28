@@ -8,5 +8,9 @@ module ExceptionHandler
     rescue_from Mongoid::Errors::InvalidFind do |e|
       render json: { message: e.message }, status: :bad_request
     end
+
+    rescue_from ActionController::ParameterMissing do |e|     
+      render json: { message: e.message }, status: :bad_request
+    end
   end  
 end

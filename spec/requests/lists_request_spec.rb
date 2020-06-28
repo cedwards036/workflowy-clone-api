@@ -29,4 +29,28 @@ RSpec.describe "Lists", type: :request do
       end
     end
   end
+
+  describe "POST /lists" do
+    let(:valid_attributes) { { 
+      list: {
+        show_completed: false,
+      }
+    } }
+
+    context 'when the request is valid' do
+      before {post '/lists', params: valid_attributes}
+
+      it 'creates a list' do
+        expect(JSON.parse(response.body)['show_completed']).to eq(false)
+        expect(List.all).not_to be_empty
+      end
+    end
+
+    context 'when the request is invalid' do
+      it 'returns status code 400' do
+        post '/lists', params: {foo: 'bar'}
+        expect(response).to have_http_status(400)
+      end
+    end
+  end
 end
