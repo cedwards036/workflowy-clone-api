@@ -6,8 +6,8 @@ RSpec.describe "Tags", type: :request do
   let(:list_id) {list.id.to_s}
   let(:tag_id) { tag.id.to_s }
 
-  describe 'GET /lists/:list_id/tags/:tag_id' do
-    before { get "/lists/#{list_id}/tags/#{tag_id}" }
+  describe 'GET /tags/:tag_id' do
+    before { get "/tags/#{tag_id}" }
 
     context 'when the record exists' do
       it 'returns the tag' do
@@ -46,10 +46,18 @@ RSpec.describe "Tags", type: :request do
       end
     end
 
-    context 'when the record does not exist' do
-      before { get "/lists/#{list_id}/tags?name=unknown_name" }
+    context 'when no tag with that name exists' do
+      it 'returns status code 404' do
+        get "/lists/#{list_id}/tags?name=unknown_name"
+        expect(response).to have_http_status(404)
+      end
+    end
+
+    context 'when a tag with the same name exists but not in the current list' do
+      let!(:other_tag) {create(:tag, name: "other_tag_name")}
 
       it 'returns status code 404' do
+        get "/lists/#{list_id}/tags?name=other_tag_name"
         expect(response).to have_http_status(404)
       end
     end

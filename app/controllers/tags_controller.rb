@@ -2,7 +2,7 @@ class TagsController < ApplicationController
   before_action :set_tag, only: :show
 
   def index
-    @tags = Tag.find_by(name: params[:name])
+    @tags = Tag.find_by(name: params[:name], list_id: params[:list_id])
     render json: @tags, status: :ok
   end
 
