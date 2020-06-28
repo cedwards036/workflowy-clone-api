@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :tag do
     list
-    name { Faker::Music::Opera.verdi }
+    name { Faker::Lorem.word }
   end
 end
