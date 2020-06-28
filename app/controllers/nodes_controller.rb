@@ -6,10 +6,17 @@ class NodesController < ApplicationController
   end
 
   def create
-    parent = Node.find(params[:parent_id])
-    @node = parent.child_nodes.build(node_params)
-    @node.save
-    render json: @node, status: :created
+    if (params.has_key? :parent_id) && (params.has_key? :list_id)
+      render json: { message: "A node cannot have both a parent node and a parent list" }, status: :bad_request
+    else
+      if params.has_key? :parent_id
+        create_node_from_parent_node
+      else 
+        create_node_from_list
+      end
+      @node.save
+      render json: @node, status: :created
+    end
   end
 
   def update
@@ -23,6 +30,16 @@ class NodesController < ApplicationController
   end
 
   private
+
+  def create_node_from_parent_node
+    parent = Node.find(params[:parent_id])
+    @node = parent.child_nodes.build(node_params)
+  end
+
+  def create_node_from_list
+    list = List.find(params[:list_id])
+    @node = list.nodes.build(node_params)
+  end
 
   def node_params
     params.require(:node).permit(:text, :completed, :expanded)

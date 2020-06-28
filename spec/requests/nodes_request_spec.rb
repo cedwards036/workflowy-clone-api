@@ -31,46 +31,114 @@ RSpec.describe "Nodes", type: :request do
   end
 
   describe 'POST /nodes' do
-    let(:valid_attributes) { { 
-      node: {
-        text: 'This is a node', 
-        completed: false,
-        expanded: false,
-      }, 
-      parent_id: node_id 
-    } }
+    context 'when adding a node to a parent node' do
+      let(:valid_attributes) { { 
+        node: {
+          text: 'This is a node', 
+          completed: false,
+          expanded: false,
+        }, 
+        parent_id: node_id 
+      } }
 
-    context 'when the request is valid' do
-      before {post '/nodes', params: valid_attributes}
+      context 'when the request is valid' do
+        before {post '/nodes', params: valid_attributes}
 
-      it 'creates a node' do
-        expect(JSON.parse(response.body)['text']).to eq('This is a node')
+        it 'creates a node' do
+          expect(JSON.parse(response.body)['text']).to eq('This is a node')
+        end
+
+        it 'embeds the node in the parent' do
+          expect(Node.find(node_id).child_nodes.length).to eq(1)
+        end
       end
 
-      it 'embeds the node in the parent' do
-        expect(Node.find(node_id).child_nodes.length).to eq(1)
+      context 'when the request is invalid' do
+        context 'because of the response format' do
+          it 'returns status code 400' do
+            post '/nodes', params: {foo: 'bar'}
+            expect(response).to have_http_status(400)
+          end
+        end
+        context 'because of an invalid parent id' do
+          it 'returns status code 404' do
+            post '/nodes', params: { 
+              node: {
+                text: 'This is a node', 
+                completed: false,
+                expanded: false,
+              }, 
+              parent_id: 'some invalid id'
+            }
+            expect(response).to have_http_status(404)
+          end
+        end
+      end
+    end
+    
+    context "when adding a node directly to a list" do
+      let(:list) {create(:list)}
+      let(:list_id) {list.id.to_s}
+      let(:valid_attributes) { { 
+        node: {
+          text: 'This is a node', 
+          completed: false,
+          expanded: false,
+        },
+        list_id: list_id
+      } }
+
+      context 'when the request is valid' do
+        before {post "/nodes", params: valid_attributes}
+
+        it 'creates a node' do
+          expect(JSON.parse(response.body)['text']).to eq('This is a node')
+        end
+
+        it 'embeds the node in the parent' do
+          expect(List.find(list_id).nodes.length).to eq(1)
+        end
+      end
+
+      context 'when the request is invalid' do
+        context 'because of the response format' do
+          it 'returns status code 400' do
+            post "/nodes", params: {foo: 'bar'}
+            expect(response).to have_http_status(400)
+          end
+          context 'because of an invalid parent id' do
+            it 'returns status code 404' do
+              post '/nodes', params: { 
+                node: {
+                  text: 'This is a node', 
+                  completed: false,
+                  expanded: false,
+                }, 
+                list_id: 'some invalid id'
+              }
+              expect(response).to have_http_status(404)
+            end
+          end
+        end
       end
     end
 
-    context 'when the request is invalid' do
-      context 'because of the response format' do
-        it 'returns status code 400' do
-          post '/nodes', params: {foo: 'bar'}
-          expect(response).to have_http_status(400)
-        end
+    context "when specifying both parent_id and list_id" do
+      before { post "/nodes", params: { 
+        node: {
+          text: 'This is a node', 
+          completed: false,
+          expanded: false,
+        },
+        list_id: 234,
+        parent_id:567
+      } }
+      it "returns status code 400" do
+        expect(response).to have_http_status(400)
       end
-      context 'because of an invalid parent id' do
-        it 'returns status code 404' do
-          post '/nodes', params: { 
-            node: {
-              text: 'This is a node', 
-              completed: false,
-              expanded: false,
-            }, 
-            parent_id: 'some invalid id'
-          }
-          expect(response).to have_http_status(404)
-        end
+
+      it 'returns an invalid request message' do
+        expect(response.body).to match(/A node cannot have both a parent node and a parent list/)
       end
     end
   end
