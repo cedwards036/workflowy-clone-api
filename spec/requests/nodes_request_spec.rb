@@ -38,7 +38,7 @@ RSpec.describe "Nodes", type: :request do
           completed: false,
           expanded: false,
         }, 
-        parent_id: node_id 
+        parent_node_id: node_id 
       } }
 
       context 'when the request is valid' do
@@ -68,7 +68,7 @@ RSpec.describe "Nodes", type: :request do
                 completed: false,
                 expanded: false,
               }, 
-              parent_id: 'some invalid id'
+              parent_node_id: 'some invalid id'
             }
             expect(response).to have_http_status(404)
           end
@@ -123,7 +123,7 @@ RSpec.describe "Nodes", type: :request do
       end
     end
 
-    context "when specifying both parent_id and list_id" do
+    context "when specifying both parent_node_id and list_id" do
       before { post "/nodes", params: { 
         node: {
           text: 'This is a node', 
@@ -131,7 +131,7 @@ RSpec.describe "Nodes", type: :request do
           expanded: false,
         },
         list_id: 234,
-        parent_id:567
+        parent_node_id:567
       } }
       it "returns status code 400" do
         expect(response).to have_http_status(400)
@@ -149,6 +149,7 @@ RSpec.describe "Nodes", type: :request do
         text: 'Some new text', 
         completed: true,
         expanded: true,
+        tag_ids: ['32858f9839f8j', 'fjsa02093j093f']
       }
     } }
     context 'when the record exists' do
@@ -158,6 +159,7 @@ RSpec.describe "Nodes", type: :request do
         expect(updated_node['text']).to eq('Some new text')
         expect(updated_node['completed']).to be(true)
         expect(updated_node['expanded']).to be(true)
+        expect(updated_node['tag_ids']).to eq(['32858f9839f8j', 'fjsa02093j093f'])
       end
 
       it 'returns status code 204' do
