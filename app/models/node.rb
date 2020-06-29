@@ -5,8 +5,9 @@ class Node
   field :completed, type: Boolean
   field :expanded, type: Boolean
   has_and_belongs_to_many :tags
-  recursively_embeds_many
-  embedded_in :list
+  has_many :child_nodes, :class_name => 'Node'
+  belongs_to :parent_node, :class_name => 'Node', optional: true
+  belongs_to :list, optional: true
 
-  validates_presence_of :text
+  validates_presence_of :text, :completed, :expanded
 end
