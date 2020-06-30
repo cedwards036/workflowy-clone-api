@@ -1,16 +1,21 @@
 require 'rails_helper'
 
 RSpec.describe "Lists", type: :request do
-  let!(:lists) { create_list(:list, 3) }
-  let(:list_id) { lists.first.id.to_s }
+  let!(:child_node) {create(:node_with_descendents, depth: 1)}
+  let!(:list) { child_node.list }
+  let(:list_id) { list.id.to_s }
 
   describe 'GET /lists/:id' do
     before { get "/lists/#{list_id}" }
 
     context 'when the record exists' do
       it 'returns the list' do
-        expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['_id']['$oid']).to eq(list_id)
+        expect(JSON.parse(response.body)['id']).to eq(list_id)
+      end
+
+      it 'returns all descendent nodes in the list' do
+        grandchildren = JSON.parse(response.body)['nodes'][0]['child_nodes']
+        expect(grandchildren.length).to eq(1)
       end
 
       it 'returns status code 200' do

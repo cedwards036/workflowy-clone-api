@@ -10,7 +10,7 @@ RSpec.describe "Nodes", type: :request do
     context 'when the record exists' do
       it 'returns the node' do
         expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['_id']['$oid']).to eq(node_id)
+        expect(JSON.parse(response.body)['id']).to eq(node_id)
       end
 
       it 'returns status code 200' do
@@ -48,7 +48,7 @@ RSpec.describe "Nodes", type: :request do
           expect(JSON.parse(response.body)['text']).to eq('This is a node')
         end
 
-        it 'embeds the node in the parent' do
+        it 'references the node in the parent' do
           expect(Node.find(node_id).child_nodes.length).to eq(1)
         end
       end
@@ -95,8 +95,8 @@ RSpec.describe "Nodes", type: :request do
           expect(JSON.parse(response.body)['text']).to eq('This is a node')
         end
 
-        it 'embeds the node in the parent' do
-          expect(List.find(list_id).nodes.length).to eq(1)
+        it 'references the node in the parent' do
+          expect(List.find(list_id).nodes[0]['text']).to eq('This is a node')
         end
       end
 
@@ -148,8 +148,7 @@ RSpec.describe "Nodes", type: :request do
       node: {
         text: 'Some new text', 
         completed: true,
-        expanded: true,
-        tag_ids: ['32858f9839f8j', 'fjsa02093j093f']
+        expanded: true
       }
     } }
     context 'when the record exists' do
@@ -159,7 +158,6 @@ RSpec.describe "Nodes", type: :request do
         expect(updated_node['text']).to eq('Some new text')
         expect(updated_node['completed']).to be(true)
         expect(updated_node['expanded']).to be(true)
-        expect(updated_node['tag_ids']).to eq(['32858f9839f8j', 'fjsa02093j093f'])
       end
 
       it 'returns status code 204' do

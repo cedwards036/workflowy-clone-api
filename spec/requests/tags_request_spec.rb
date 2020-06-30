@@ -12,7 +12,7 @@ RSpec.describe "Tags", type: :request do
     context 'when the record exists' do
       it 'returns the tag' do
         expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['_id']['$oid']).to eq(tag_id)
+        expect(JSON.parse(response.body)['id']).to eq(tag_id)
       end
 
       it 'returns status code 200' do
@@ -38,7 +38,7 @@ RSpec.describe "Tags", type: :request do
 
       it 'returns the tag' do
         expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['_id']['$oid']).to eq(tag_id)
+        expect(JSON.parse(response.body)['id']).to eq(tag_id)
       end
 
       it 'returns status code 200' do
@@ -80,8 +80,7 @@ RSpec.describe "Tags", type: :request do
       end
 
       it 'adds the tag to the tag\'s list' do
-        new_tag_id = Tag.all[1]['_id']
-        expect(List.find(list_id).tags[1]['_id']).to eq(new_tag_id)
+        expect(List.find(list_id).tags[1]['name']).to eq('a_new_tag')
       end
     end
 
