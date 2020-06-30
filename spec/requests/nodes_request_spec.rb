@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe "Nodes", type: :request do
   let!(:nodes) { create_list(:node, 5) }
   let(:node_id) { nodes.first.id.to_s }
+  let(:list_id) { nodes.first.list_id.to_s}
 
   describe 'GET /nodes/:id' do
     before { get "/nodes/#{node_id}" }
@@ -37,8 +38,10 @@ RSpec.describe "Nodes", type: :request do
           text: 'This is a node', 
           completed: false,
           expanded: false,
+          tag_names: ['tag1', 'tag2'],
+          parent_node_id: node_id, 
+          list_id: list_id
         }, 
-        parent_node_id: node_id 
       } }
 
       context 'when the request is valid' do
@@ -46,6 +49,20 @@ RSpec.describe "Nodes", type: :request do
 
         it 'creates a node' do
           expect(JSON.parse(response.body)['text']).to eq('This is a node')
+        end
+
+        it 'returns status code 201' do
+          expect(response).to have_http_status(201)
+        end
+
+        it 'creates the tags if they do not already exist' do
+          tags = Tag.all
+          expect(tags[0]['name']).to eq('tag1')
+          expect(tags[1]['name']).to eq('tag2')
+        end
+
+        it 'adds the tags to the node' do
+          expect(JSON.parse(response.body)['tag_names']).to eq(['tag1', 'tag2'])
         end
 
         it 'references the node in the parent' do
@@ -67,8 +84,10 @@ RSpec.describe "Nodes", type: :request do
                 text: 'This is a node', 
                 completed: false,
                 expanded: false,
+                tag_names: [],
+                parent_node_id: 'some invalid id', 
+                list_id: list_id
               }, 
-              parent_node_id: 'some invalid id'
             }
             expect(response).to have_http_status(404)
           end
@@ -77,15 +96,16 @@ RSpec.describe "Nodes", type: :request do
     end
     
     context "when adding a node directly to a list" do
-      let(:list) {create(:list)}
-      let(:list_id) {list.id.to_s}
+      let(:list) {nodes.first.list}
       let(:valid_attributes) { { 
         node: {
           text: 'This is a node', 
           completed: false,
           expanded: false,
-        },
-        list_id: list_id
+          tag_names: [],
+          parent_list_id: list_id, 
+          list_id: list_id
+        }
       } }
 
       context 'when the request is valid' do
@@ -95,8 +115,12 @@ RSpec.describe "Nodes", type: :request do
           expect(JSON.parse(response.body)['text']).to eq('This is a node')
         end
 
+        it 'returns status code 201' do
+          expect(response).to have_http_status(201)
+        end
+
         it 'references the node in the parent' do
-          expect(List.find(list_id).nodes[0]['text']).to eq('This is a node')
+          expect(List.find(list_id).nodes[1]['text']).to eq('This is a node')
         end
       end
 
@@ -113,32 +137,15 @@ RSpec.describe "Nodes", type: :request do
                   text: 'This is a node', 
                   completed: false,
                   expanded: false,
+                  tag_names: [],
+                  list_id: list_id,
+                  parent_list_id: 'some_invalid_id'
                 }, 
-                list_id: 'some invalid id'
               }
               expect(response).to have_http_status(404)
             end
           end
         end
-      end
-    end
-
-    context "when specifying both parent_node_id and list_id" do
-      before { post "/nodes", params: { 
-        node: {
-          text: 'This is a node', 
-          completed: false,
-          expanded: false,
-        },
-        list_id: 234,
-        parent_node_id:567
-      } }
-      it "returns status code 400" do
-        expect(response).to have_http_status(400)
-      end
-
-      it 'returns an invalid request message' do
-        expect(response.body).to match(/A node cannot have both a parent node and a parent list/)
       end
     end
   end
@@ -148,7 +155,8 @@ RSpec.describe "Nodes", type: :request do
       node: {
         text: 'Some new text', 
         completed: true,
-        expanded: true
+        expanded: true,
+        tag_names: ['a_new_tag']
       }
     } }
     context 'when the record exists' do

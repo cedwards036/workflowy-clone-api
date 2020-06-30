@@ -14,7 +14,7 @@ RSpec.describe "Lists", type: :request do
       end
 
       it 'returns all descendent nodes in the list' do
-        grandchildren = JSON.parse(response.body)['nodes'][0]['child_nodes']
+        grandchildren = JSON.parse(response.body)['child_nodes'][0]['child_nodes']
         expect(grandchildren.length).to eq(1)
       end
 

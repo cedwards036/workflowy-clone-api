@@ -2,12 +2,12 @@ class ListsController < ApplicationController
   before_action :set_list, only: [:show]
 
   def show
-    render json: @list.as_json(methods: [:nodes, :child_nodes]), status: :ok
+    render json: @list.as_json(methods: [:child_nodes]), status: :ok
   end
 
   def create
     @list = List.create!(list_params)
-    render json: @list, status: :created
+    render json: @list.as_json(methods: [:child_nodes]), status: :created
   end
 
   private
