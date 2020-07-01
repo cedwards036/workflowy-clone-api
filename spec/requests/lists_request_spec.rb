@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "Lists", type: :request do
-  let!(:child_node) {create(:node_with_descendents, depth: 1)}
+  let!(:child_node) {create(:node_with_descendents, depth: 1, tags_count: 2)}
   let!(:list) { child_node.list }
   let(:list_id) { list.id.to_s }
 
@@ -16,6 +16,11 @@ RSpec.describe "Lists", type: :request do
       it 'returns all descendent nodes in the list' do
         grandchildren = JSON.parse(response.body)['child_nodes'][0]['child_nodes']
         expect(grandchildren.length).to eq(1)
+      end
+
+      it 'includes tag names in child nodes' do
+        child = JSON.parse(response.body)['child_nodes'][0]
+        expect(child['tag_names'].length).to eq(2)
       end
 
       it 'returns status code 200' do

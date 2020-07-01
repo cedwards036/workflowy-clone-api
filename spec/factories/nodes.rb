@@ -6,6 +6,14 @@ FactoryBot.define do
     completed {Faker::Boolean.boolean(true_ratio: 0.5)}
     expanded {Faker::Boolean.boolean(true_ratio: 0.5)}
 
+    transient do 
+      tags_count { 0 }
+    end
+
+    after(:create) do |node, evaluator|
+      node.tags << create_list(:tag, evaluator.tags_count, nodes: [node])
+    end
+
     factory :node_with_descendents do
       transient do
         depth { 2 }
