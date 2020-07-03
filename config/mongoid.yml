@@ -169,3 +169,8 @@ test:
         read:
           mode: :primary
         max_pool_size: 1
+
+production:
+  clients:
+    default:
+      uri: mongodb+srv://<%=ENV["atlas_username"]%>:<%=ENV["atlas_password"]%>@cluster0-ogcdy.mongodb.net/<workflowy_clone_api_development>?retryWrites=true&w=majority
