@@ -9,4 +9,8 @@ class List
   def root_node_id
     root_node.id
   end
+
+  def tag_names
+    tags.pluck(:name)
+  end
 end

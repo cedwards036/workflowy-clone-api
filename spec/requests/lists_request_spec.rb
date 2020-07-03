@@ -23,6 +23,10 @@ RSpec.describe "Lists", type: :request do
         expect(root['tag_names'].length).to eq(2)
       end
 
+      it 'includes all tag names associated with the list' do
+        expect(JSON.parse(response.body)['tag_names'].length).to eq(4)
+      end
+
       it 'includes child node ids in each of its nodes' do
         root = JSON.parse(response.body)['nodes'][0]
         expect(root['child_ids'][0]).to eq(child_node.id.to_s)
