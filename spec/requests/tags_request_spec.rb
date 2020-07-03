@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe "Tags", type: :request do
-  let!(:tag) {create(:tag)}
-  let(:list) {tag.list}
+  let(:list) {create(:list)}
+  let!(:tag) {create(:tag, list: list)}
   let(:list_id) {list.id.to_s}
   let(:tag_id) { tag.id.to_s }
 
@@ -12,7 +12,7 @@ RSpec.describe "Tags", type: :request do
     context 'when the record exists' do
       it 'returns the tag' do
         expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['id']).to eq(tag_id)
+        expect(JSON.parse(response.body)['_id']).to eq(tag_id)
       end
 
       it 'returns status code 200' do
@@ -38,7 +38,7 @@ RSpec.describe "Tags", type: :request do
 
       it 'returns the tag' do
         expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['id']).to eq(tag_id)
+        expect(JSON.parse(response.body)['_id']).to eq(tag_id)
       end
 
       it 'returns status code 200' do
@@ -54,7 +54,7 @@ RSpec.describe "Tags", type: :request do
     end
 
     context 'when a tag with the same name exists but not in the current list' do
-      let!(:other_tag) {create(:tag, name: "other_tag_name")}
+      let!(:other_tag) {create(:tag, name: "other_tag_name", list: create(:list))}
 
       it 'returns status code 404' do
         get "/lists/#{list_id}/tags?name=other_tag_name"
@@ -76,11 +76,11 @@ RSpec.describe "Tags", type: :request do
 
       it 'creates a tag' do
         expect(JSON.parse(response.body)['name']).to eq('a_new_tag')
-        expect(Tag.all.length).to eq(2)
+        expect(Tag.all.pluck(:name)).to include("a_new_tag")
       end
 
       it 'adds the tag to the tag\'s list' do
-        expect(List.find(list_id).tags[1]['name']).to eq('a_new_tag')
+        expect(List.find(list_id).tags.pluck(:name)).to include('a_new_tag')
       end
     end
 

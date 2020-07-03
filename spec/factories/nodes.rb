@@ -1,17 +1,15 @@
 FactoryBot.define do
   factory :node do
-    list
-    parent_list {list}
     text { Faker::TvShows::BojackHorseman.quote }
     completed {Faker::Boolean.boolean(true_ratio: 0.5)}
     expanded {Faker::Boolean.boolean(true_ratio: 0.5)}
 
     transient do 
-      tags_count { 0 }
+      tags_count { 2 }
     end
 
     after(:create) do |node, evaluator|
-      node.tags << create_list(:tag, evaluator.tags_count, nodes: [node])
+      node.tags << create_list(:tag, evaluator.tags_count, nodes: [node], list: node.list)
     end
 
     factory :node_with_descendents do
@@ -21,7 +19,7 @@ FactoryBot.define do
 
       after(:create) do |node, evaluator|
         if evaluator.depth > 0
-          create(:node_with_descendents, depth: evaluator.depth - 1, parent_node: node)
+          create(:node_with_descendents, depth: evaluator.depth - 1, node: node)
         end
       end
     end

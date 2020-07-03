@@ -5,14 +5,18 @@ class Node
   field :completed, type: Boolean
   field :expanded, type: Boolean
   has_and_belongs_to_many :tags
-  has_many :child_nodes, class_name: 'Node'
-  belongs_to :list, class_name: 'List', inverse_of: :nodes
+  has_many :children, class_name: 'Node'
   belongs_to :parent_node, class_name: 'Node', optional: true
-  belongs_to :parent_list, class_name: 'List', optional: true, inverse_of: :child_nodes
+  belongs_to :list, class_name: 'List', inverse_of: :nodes
+  belongs_to :parent_list, class_name: 'List', inverse_of: :root_node, optional: true
 
   validates_presence_of :text, :completed, :expanded
 
   def tag_names
     tags.map {|tag| tag[:name]}
+  end
+
+  def child_ids
+    children.pluck(:id)
   end
 end

@@ -2,12 +2,14 @@ class ListsController < ApplicationController
   before_action :set_list, only: [:show]
 
   def show
-    render json: @list.as_json(methods: [:child_nodes, :tag_names]), status: :ok
+    render json: @list.as_json(methods: [:root_node_id, :nodes, :tag_names, :child_ids]), status: :ok
   end
 
   def create
     @list = List.create!(list_params)
-    render json: @list.as_json(methods: [:child_nodes, :tag_names]), status: :created
+    root_node = @list.nodes.create!({text: "root_node", completed: false, expanded: false})
+    @list.root_node = root_node
+    render json: @list.as_json(methods: [:root_node_id, :nodes, :tag_names, :child_ids]), status: :created
   end
 
   private

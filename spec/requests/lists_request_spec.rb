@@ -1,8 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "Lists", type: :request do
-  let!(:child_node) {create(:node_with_descendents, depth: 1, tags_count: 2)}
-  let!(:list) { child_node.list }
+  let!(:list) {create(:list)}
+  let!(:root_node) {list.root_node}
+  let!(:child_node) {create(:node, list: list, parent_node: root_node)}
   let(:list_id) { list.id.to_s }
 
   describe 'GET /lists/:id' do
@@ -10,17 +11,21 @@ RSpec.describe "Lists", type: :request do
 
     context 'when the record exists' do
       it 'returns the list' do
-        expect(JSON.parse(response.body)['id']).to eq(list_id)
+        expect(JSON.parse(response.body)['_id']).to eq(list_id)
       end
 
-      it 'returns all descendent nodes in the list' do
-        grandchildren = JSON.parse(response.body)['child_nodes'][0]['child_nodes']
-        expect(grandchildren.length).to eq(1)
+      it 'returns the root node id' do
+        expect(JSON.parse(response.body)['root_node_id']).to eq(root_node.id.to_s)
       end
 
       it 'includes tag names in child nodes' do
-        child = JSON.parse(response.body)['child_nodes'][0]
-        expect(child['tag_names'].length).to eq(2)
+        root = JSON.parse(response.body)['nodes'][0]
+        expect(root['tag_names'].length).to eq(2)
+      end
+
+      it 'includes child node ids in each of its nodes' do
+        root = JSON.parse(response.body)['nodes'][0]
+        expect(root['child_ids'][0]).to eq(child_node.id.to_s)
       end
 
       it 'returns status code 200' do
@@ -50,8 +55,11 @@ RSpec.describe "Lists", type: :request do
     context 'when the request is valid' do
       before {post '/lists', params: valid_attributes}
 
-      it 'creates a list' do
+      it 'creates a list with a root node' do
         expect(JSON.parse(response.body)['show_completed']).to eq(false)
+        expect(JSON.parse(response.body)['nodes'].length).to eq(1)
+        new_root_node = JSON.parse(response.body)['nodes'][0]
+        expect(JSON.parse(response.body)['root_node_id']).to eq(new_root_node['_id'])
         expect(List.all).not_to be_empty
       end
     end

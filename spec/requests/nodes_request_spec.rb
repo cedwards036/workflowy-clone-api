@@ -1,17 +1,18 @@
 require 'rails_helper'
 
 RSpec.describe "Nodes", type: :request do
-  let!(:nodes) { create_list(:node, 5) }
-  let(:node_id) { nodes.first.id.to_s }
-  let(:list_id) { nodes.first.list_id.to_s}
+  let!(:list) {create(:list)}
+  let!(:node) {create(:node, list: list, parent_node: list.root_node)}
+  let(:node_id) { node.id.to_s }
+  let(:list_id) { list.id.to_s}
 
-  describe 'GET /nodes/:id' do
+  describe 'GET nodes/:id' do
     before { get "/nodes/#{node_id}" }
 
     context 'when the record exists' do
       it 'returns the node' do
         expect(JSON.parse(response.body)).not_to be_empty
-        expect(JSON.parse(response.body)['id']).to eq(node_id)
+        expect(JSON.parse(response.body)['_id']).to eq(node_id)
       end
 
       it 'returns status code 200' do
@@ -31,126 +32,76 @@ RSpec.describe "Nodes", type: :request do
     end
   end
 
-  describe 'POST /nodes' do
-    context 'when adding a node to a parent node' do
-      let(:valid_attributes) { { 
-        node: {
-          text: 'This is a node', 
-          completed: false,
-          expanded: false,
-          tag_names: ['tag1', 'tag2'],
-          parent_node_id: node_id, 
-          list_id: list_id
-        }, 
-      } }
+  describe 'POST lists/:list_id/nodes' do
+    let(:valid_attributes) { { 
+      node: {
+        text: 'This is a node', 
+        completed: false,
+        expanded: false,
+        tag_names: ['tag1', 'tag2'],
+        parent_node_id: node_id
+      }, 
+    } }
 
-      context 'when the request is valid' do
-        before {post '/nodes', params: valid_attributes}
+    context 'when the request is valid' do
+      before {post "/lists/#{list_id}/nodes", params: valid_attributes}
 
-        it 'creates a node' do
-          expect(JSON.parse(response.body)['text']).to eq('This is a node')
-        end
-
-        it 'returns status code 201' do
-          expect(response).to have_http_status(201)
-        end
-
-        it 'creates the tags if they do not already exist' do
-          tags = Tag.all
-          expect(tags[0]['name']).to eq('tag1')
-          expect(tags[1]['name']).to eq('tag2')
-        end
-
-        it 'adds the tags to the node' do
-          expect(JSON.parse(response.body)['tag_names']).to eq(['tag1', 'tag2'])
-        end
-
-        it 'references the node in the parent' do
-          expect(Node.find(node_id).child_nodes.length).to eq(1)
-        end
+      it 'creates a node' do
+        expect(JSON.parse(response.body)['text']).to eq('This is a node')
       end
 
-      context 'when the request is invalid' do
-        context 'because of the response format' do
-          it 'returns status code 400' do
-            post '/nodes', params: {foo: 'bar'}
-            expect(response).to have_http_status(400)
-          end
-        end
-        context 'because of an invalid parent id' do
-          it 'returns status code 404' do
-            post '/nodes', params: { 
-              node: {
-                text: 'This is a node', 
-                completed: false,
-                expanded: false,
-                tag_names: [],
-                parent_node_id: 'some invalid id', 
-                list_id: list_id
-              }, 
-            }
-            expect(response).to have_http_status(404)
-          end
-        end
+      it 'autopopulates the list ID from the parent' do
+        expect(JSON.parse(response.body)['list_id']).to eq(list_id)
+      end
+
+      it 'returns status code 201' do
+        expect(response).to have_http_status(201)
+      end
+
+      it 'creates the tags if they do not already exist' do
+        tag_names = Tag.all.pluck(:name)
+        expect(tag_names).to include('tag1')
+        expect(tag_names).to include('tag2')
+      end
+
+      it 'adds the tags to the node' do
+        expect(JSON.parse(response.body)['tag_names']).to eq(['tag1', 'tag2'])
+      end
+
+      it 'references the node in the parent' do
+        expect(node.children.length).to eq(1)
+      end
+
+      it 'references the node in the list' do
+        expect(list.nodes.length).to eq(3)
       end
     end
-    
-    context "when adding a node directly to a list" do
-      let(:list) {nodes.first.list}
-      let(:valid_attributes) { { 
-        node: {
-          text: 'This is a node', 
-          completed: false,
-          expanded: false,
-          tag_names: [],
-          parent_list_id: list_id, 
-          list_id: list_id
-        }
-      } }
 
-      context 'when the request is valid' do
-        before {post "/nodes", params: valid_attributes}
-
-        it 'creates a node' do
-          expect(JSON.parse(response.body)['text']).to eq('This is a node')
-        end
-
-        it 'returns status code 201' do
-          expect(response).to have_http_status(201)
-        end
-
-        it 'references the node in the parent' do
-          expect(List.find(list_id).nodes[1]['text']).to eq('This is a node')
+    context 'when the request is invalid' do
+      context 'because of the response format' do
+        it 'returns status code 400' do
+          post "/lists/#{list_id}/nodes", params: {foo: 'bar'}
+          expect(response).to have_http_status(400)
         end
       end
-
-      context 'when the request is invalid' do
-        context 'because of the response format' do
-          it 'returns status code 400' do
-            post "/nodes", params: {foo: 'bar'}
-            expect(response).to have_http_status(400)
-          end
-          context 'because of an invalid parent id' do
-            it 'returns status code 404' do
-              post '/nodes', params: { 
-                node: {
-                  text: 'This is a node', 
-                  completed: false,
-                  expanded: false,
-                  tag_names: [],
-                  list_id: list_id,
-                  parent_list_id: 'some_invalid_id'
-                }, 
-              }
-              expect(response).to have_http_status(404)
-            end
-          end
+      context 'because of an invalid parent id' do
+        it 'returns status code 404' do
+          post "/lists/#{list_id}/nodes", params: { 
+            node: {
+              text: 'This is a node', 
+              completed: false,
+              expanded: false,
+              tag_names: [],
+              parent_node_id: 'some invalid id'
+            }, 
+          }
+          expect(response).to have_http_status(404)
         end
       end
     end
   end
 
-  describe 'PUT /nodes/:id' do
+  describe 'PUT nodes/:id' do
     let(:valid_attributes) { { 
       node: {
         text: 'Some new text', 
@@ -181,7 +132,7 @@ RSpec.describe "Nodes", type: :request do
     end
   end
 
-  describe 'DELETE /nodes/:id' do
+  describe 'DELETE lists/:list_id/nodes/:id' do
     context 'when the record exists' do
       before { delete "/nodes/#{node_id}" }
       it 'deletes the record' do
