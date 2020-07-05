@@ -7,7 +7,7 @@ class ListsController < ApplicationController
 
   def create
     @list = List.create!(list_params)
-    root_node = @list.nodes.create!({text: "root_node", completed: false, expanded: false})
+    root_node = @list.nodes.create!({text: "My List", completed: false, expanded: false})
     @list.root_node = root_node
     render json: @list.as_json(methods: [:root_node_id, :nodes, :tag_names, :child_ids]), status: :created
   end
