@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Node, type: :model do
-  it {should have_many(:children).of_type(Node)}
+  it {should have_many(:children).of_type(Node).with_dependent(:destroy)}
   it {should belong_to(:parent_node).of_type(Node)}
   it {should belong_to(:parent_list).of_type(List)}
   it {should belong_to(:list)}
