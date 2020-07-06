@@ -10,7 +10,7 @@ class Node
   belongs_to :list, class_name: 'List', inverse_of: :nodes
   belongs_to :parent_list, class_name: 'List', inverse_of: :root_node, optional: true
 
-  validates_presence_of :text, :completed, :expanded
+  validates_presence_of :completed, :expanded
 
   def tag_names
     tags.map {|tag| tag[:name]}
