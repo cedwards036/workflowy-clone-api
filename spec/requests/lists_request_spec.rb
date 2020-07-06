@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "Lists", type: :request do
-  let!(:list) {create(:list)}
+  let!(:list) {create(:list, show_completed: false)}
   let!(:root_node) {list.root_node}
   let!(:child_node) {create(:node, list: list, parent_node: root_node)}
   let(:list_id) { list.id.to_s }
@@ -72,6 +72,29 @@ RSpec.describe "Lists", type: :request do
       it 'returns status code 400' do
         post '/lists', params: {foo: 'bar'}
         expect(response).to have_http_status(400)
+      end
+    end
+
+    describe "PUT /lists/:id" do
+      let(:valid_attributes) { { 
+        list: {
+          show_completed: true,
+        }
+      } }
+  
+      context 'when the request is valid' do
+        before {put "/lists/#{list_id}", params: valid_attributes}
+
+        it 'updates the list\'s show_completed attribute' do
+          expect(List.find(list_id)['show_completed']).to eq(true)
+        end
+      end
+  
+      context 'when the request is invalid' do
+        before {put "/lists/#{list_id}", params: {foo: 'bar'}}
+        it 'returns status code 400' do
+          expect(response).to have_http_status(400)
+        end
       end
     end
   end
