@@ -39,7 +39,8 @@ RSpec.describe "Nodes", type: :request do
         completed: false,
         expanded: false,
         tag_names: ['tag1', 'tag2'],
-        parent_node_id: node_id
+        parent_node_id: node_id,
+        index_in_parent: 0
       }, 
     } }
 
@@ -48,6 +49,7 @@ RSpec.describe "Nodes", type: :request do
 
       it 'creates a node' do
         expect(JSON.parse(response.body)['text']).to eq('This is a node')
+        expect(JSON.parse(response.body)['index_in_parent']).to eq(0)
       end
 
       it 'autopopulates the list ID from the parent' do
@@ -108,7 +110,7 @@ RSpec.describe "Nodes", type: :request do
         completed: true,
         expanded: true,
         tag_names: ['a_new_tag'],
-        child_ids: [node_id]
+        child_ids: [node_id, list.root_node.id.to_s]
       }
     } }
     context 'when the record exists' do
@@ -118,7 +120,7 @@ RSpec.describe "Nodes", type: :request do
         expect(updated_node['text']).to eq('Some new text')
         expect(updated_node['completed']).to be(true)
         expect(updated_node['expanded']).to be(true)
-        expect(updated_node.child_ids).to eq([node.id])
+        expect(updated_node.child_ids).to eq([node.id, list.root_node.id])
       end
 
       it 'returns status code 204' do

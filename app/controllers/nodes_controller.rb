@@ -12,6 +12,10 @@ class NodesController < ApplicationController
   end
 
   def update
+    node_params[:child_ids].each_with_index do |child_id, index|
+      child_node = Node.find(child_id)
+      child_node.update!({index_in_parent: index})
+    end
     @node.update!(update_params(@node.list_id))
     head :no_content
   end
@@ -43,7 +47,7 @@ class NodesController < ApplicationController
 
   def node_params
     params.require(:node).permit(:text, :completed, :expanded, :parent_node_id, 
-      :tag_names => [], :child_ids => [])
+      :index_in_parent, :tag_names => [], :child_ids => [])
   end
 
   def set_node

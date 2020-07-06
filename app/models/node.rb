@@ -4,8 +4,9 @@ class Node
   field :text, type: String
   field :completed, type: Boolean
   field :expanded, type: Boolean
+  field :index_in_parent, type: Integer
   has_and_belongs_to_many :tags
-  has_many :children, class_name: 'Node', dependent: :destroy
+  has_many :children, class_name: 'Node', dependent: :destroy, order: :index_in_parent.asc
   belongs_to :parent_node, class_name: 'Node', optional: true
   belongs_to :list, class_name: 'List', inverse_of: :nodes
   belongs_to :parent_list, class_name: 'List', inverse_of: :root_node, optional: true
