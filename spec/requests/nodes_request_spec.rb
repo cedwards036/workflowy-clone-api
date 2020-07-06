@@ -107,7 +107,8 @@ RSpec.describe "Nodes", type: :request do
         text: 'Some new text', 
         completed: true,
         expanded: true,
-        tag_names: ['a_new_tag']
+        tag_names: ['a_new_tag'],
+        child_ids: [node_id]
       }
     } }
     context 'when the record exists' do
@@ -117,6 +118,7 @@ RSpec.describe "Nodes", type: :request do
         expect(updated_node['text']).to eq('Some new text')
         expect(updated_node['completed']).to be(true)
         expect(updated_node['expanded']).to be(true)
+        expect(updated_node.child_ids).to eq([node.id])
       end
 
       it 'returns status code 204' do

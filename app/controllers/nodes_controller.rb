@@ -43,7 +43,7 @@ class NodesController < ApplicationController
 
   def node_params
     params.require(:node).permit(:text, :completed, :expanded, :parent_node_id, 
-      :tag_names => [])
+      :tag_names => [], :child_ids => [])
   end
 
   def set_node
